@@ -1,0 +1,16 @@
+Package: miregression
+Type: Package
+Title: Multiple imputation regression
+Version: 0.1.0
+Author: David Randahl
+Maintainer: David Randahl <david.randahl@pcr.uu.se>
+Description: A package to run regression models using multiple imputation through the Amelia package
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    Amelia (>= 1.8.1),
+    dplyr (>= 1.1.1),
+    foreach (>= 1.5.2),
+    magrittr
+RoxygenNote: 7.2.3
