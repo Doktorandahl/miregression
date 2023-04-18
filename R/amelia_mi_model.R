@@ -1,7 +1,7 @@
 
 
 #' Multiply imputed regression using Amelia
-#'@description
+#' @description
 #' Function for running regression analysis with mulitply imputed data using Amelia
 #'
 #'
