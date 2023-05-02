@@ -46,7 +46,9 @@ amelia_mi_model <- function(object, data, use_only_model_vars = TRUE, conf.int =
 #' @examples stargazer_amelia_mi_model(m1,type='text',out='table.txt')
 stargazer_amelia_mi_model <- function(object,digits=3,include_missingess_diagnostics = F, remove_rows=NULL,...){
   object[,2:8] <- round(object[,2:8],digits)
+  if(!is.null(remove_rows)){
   object <- object[-remove_rows,]
+  }
   stargazer::stargazer(object,summary=FALSE, rownames = F, ...)
 }
 
