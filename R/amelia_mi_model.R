@@ -31,3 +31,25 @@ amelia_mi_model <- function(object, data, use_only_model_vars = TRUE, conf.int =
 
 
 }
+
+#' Use stargazer to make output
+#'
+#' @param object an amelia_mi_model object
+#' @param digits number of digits to round to
+#' @param include_missingess_diagnostics Include missingness diagnostics,  df, r, and miss.info, in the table
+#' @param remove_rows Rows to remove from the output (eg fixed effects)
+#' @param ... Other arguments to be passed to stargazer
+#'
+#' @return Stargazer table of the model object
+#' @export
+#'
+#' @examples stargazer_amelia_mi_model(m1,type='text',out='table.txt')
+stargazer_amelia_mi_model <- function(object,digits=3,include_missingess_diagnostics = F, remove_rows=NULL,...){
+  object[,2:8] <- round(object[,2:8],digits)
+  object <- object[-remove_rows,]
+  stargazer::stargazer(object,summary=FALSE, ...)
+}
+
+
+
+
