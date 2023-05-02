@@ -49,6 +49,9 @@ stargazer_amelia_mi_model <- function(object,digits=3,include_missingess_diagnos
   if(!is.null(remove_rows)){
   object <- object[-remove_rows,]
   }
+  if(!include_missingess_diagnostics){
+    object <- object[,1:5]
+  }
   stargazer::stargazer(object,summary=FALSE, rownames = F, ...)
 }
 
