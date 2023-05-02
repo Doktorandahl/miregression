@@ -12,5 +12,6 @@ Imports:
     Amelia (>= 1.8.1),
     dplyr (>= 1.1.1),
     foreach (>= 1.5.2),
-    magrittr
+    magrittr,
+    stargazer
 RoxygenNote: 7.2.3
