@@ -1,5 +1,3 @@
-
-
 #' Multiply imputed regression using Amelia
 #' @description
 #' Function for running regression analysis with mulitply imputed data using Amelia
@@ -16,20 +14,22 @@
 #'
 #' @examples model <- lm(y~x1+x2,data=df)
 #' mi_results <- amelia_mi_model(object=model,data=df)
-amelia_mi_model <- function(object, data, use_only_model_vars = TRUE, conf.int = FALSE, ...){
-
-  if(use_only_model_vars){
-
+amelia_mi_model <- function(
+  object,
+  data,
+  use_only_model_vars = TRUE,
+  conf.int = FALSE,
+  ...
+) {
+  if (use_only_model_vars) {
     data <- data %>% dplyr::select(all.vars(formula(object)))
   }
-  mi_data <- Amelia::amelia(as.data.frame(data),...)
+  mi_data <- Amelia::amelia(as.data.frame(data), ...)
 
   mi_mods <- foreach::foreach(i = 1:length(mi_data$imputations)) %do%
-    update(object,data=mi_data$imputations[[i]])
+    update(object, data = mi_data$imputations[[i]])
 
-  Amelia::mi.combine(mi_mods,conf.int = conf.int)
-
-
+  mi.combine_debugged(mi_mods, conf.int = conf.int)
 }
 
 #' Use stargazer to make output
@@ -44,17 +44,56 @@ amelia_mi_model <- function(object, data, use_only_model_vars = TRUE, conf.int =
 #' @export
 #'
 #' @examples stargazer_amelia_mi_model(m1,type='text',out='table.txt')
-stargazer_amelia_mi_model <- function(object,digits=3,include_missingess_diagnostics = F, remove_rows=NULL,...){
-  object[,2:8] <- round(object[,2:8],digits)
-  if(!is.null(remove_rows)){
-  object <- object[-remove_rows,]
+stargazer_amelia_mi_model <- function(
+  object,
+  digits = 3,
+  include_missingess_diagnostics = F,
+  remove_rows = NULL,
+  ...
+) {
+  object[, 2:8] <- round(object[, 2:8], digits)
+  if (!is.null(remove_rows)) {
+    object <- object[-remove_rows, ]
   }
-  if(!include_missingess_diagnostics){
-    object <- object[,1:5]
+  if (!include_missingess_diagnostics) {
+    object <- object[, 1:5]
   }
-  stargazer::stargazer(object,summary=FALSE, rownames = F, ...)
+  stargazer::stargazer(object, summary = FALSE, rownames = F, ...)
 }
 
 
-
-
+mi.combine_debugged <- function(x, conf.int = FALSE, conf.level = 0.95) {
+  if (requireNamespace("broom", quietly = TRUE)) {
+    tidiers <- grep("^tidy\\.", ls(getNamespace("broom")), value = TRUE)
+    tidiers <- gsub("tidy\\.", "", tidiers)
+  } else {
+    rlang::abort("{broom} package required for mi.combine")
+  }
+  if (any(!(class(x[[1L]]) %in% tidiers))) {
+    rlang::abort("analysis model does not have tidy() method.")
+  }
+  mi_tidy <- lapply(x, function(x) broom::tidy(x))
+  m <- length(mi_tidy)
+  out <- mi_tidy[[1L]]
+  ests <- est.matrix(mi_tidy, "estimate")
+  ses <- est.matrix(mi_tidy, "std.error")
+  wi.var <- rowMeans(ses^2)
+  out$estimate <- rowMeans(ests)
+  diffs <- sweep(ests, 1, rowMeans(ests))
+  bw.var <- rowSums(diffs^2) / (m - 1)
+  out$std.error <- sqrt(wi.var + bw.var * (1 + 1 / m))
+  r <- ((1 + 1 / m) * bw.var) / wi.var
+  df <- (m - 1) * (1 + 1 / r)^2
+  miss.info <- (r + 2 / (df + 3)) / (r + 1)
+  out$statistic <- out$estimate / out$std.error
+  out$p.value <- 2 * stats::pt(out$statistic, df = df, lower.tail = FALSE)
+  out$df <- df
+  out$r <- r
+  out$miss.info <- miss.info
+  if (conf.int) {
+    t.c <- stats::qt(1 - (1 - conf.level) / 2, df = df, lower.tail = FALSE)
+    out$conf.low <- out$estimate - t.c * out$std.error
+    out$conf.high <- out$estimate + t.c * out$std.error
+  }
+  out
+}
