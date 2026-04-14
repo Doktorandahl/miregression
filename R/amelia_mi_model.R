@@ -75,8 +75,8 @@ mi.combine_debugged <- function(x, conf.int = FALSE, conf.level = 0.95) {
   mi_tidy <- lapply(x, function(x) broom::tidy(x))
   m <- length(mi_tidy)
   out <- mi_tidy[[1L]]
-  ests <- est.matrix(mi_tidy, "estimate")
-  ses <- est.matrix(mi_tidy, "std.error")
+  ests <- Amelia:::est.matrix(mi_tidy, "estimate")
+  ses <- Amelia:::est.matrix(mi_tidy, "std.error")
   wi.var <- rowMeans(ses^2)
   out$estimate <- rowMeans(ests)
   diffs <- sweep(ests, 1, rowMeans(ests))
